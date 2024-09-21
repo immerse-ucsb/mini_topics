@@ -1,0 +1,329 @@
+---
+title: "How to use `svalues` in Mplus"
+author: "Dina Arch"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+
+------------------------------------------------------------------------
+
+# IMMERSE Project
+
+![](figures/IESNewLogo.jpg){style="float: left;" width="300"}
+
+The Institute of Mixture Modeling for Equity-Oriented Researchers, Scholars, and Educators (IMMERSE) is an IES funded training grant (R305B220021) to support education scholars in integrating mixture modeling into their research.
+
+-   Please [visit our website](https://immerse.education.ucsb.edu/) to learn more.
+
+-   Visit our [GitHub](https://github.com/immerse-ucsb) account to access all the IMMERSE materials.
+
+-   Follow us on [Twitter](https://twitter.com/IMMERSE_UCSB)!
+
+How to reference this workshop: Institute of Mixture Modeling for Equity-Oriented Researchers, Scholars, and Educators (2023).
+IMMERSE Online Resources (IES No. 305B220021).
+Institute of Education Sciences.
+<https://immerse-ucsb.github.io/pre-training>
+
+------------------------------------------------------------------------
+
+## Example: Bullying in Schools
+
+------------------------------------------------------------------------
+
+To demonstrate mixture modeling in the training program and online resource components of the IES grant we utilize the *Civil Rights Data Collection (CRDC)* (CRDC) data repository.
+The CRDC is a federally mandated school-level data collection effort that occurs every other year.
+This public data is currently available for selected latent class indicators across 4 years (2011, 2013, 2015, 2017) and all US states.
+In this example, we use the Arizona state sample.
+We utilize six focal indicators which constitute the latent class model in our example; three variables which report on harassment/bullying in schools based on disability, race, or sex, and three variables on full-time equivalent school staff hires (counselor, psychologist, law enforcement).
+This data source also includes covariates on a variety of subjects and distal outcomes reported in 2018 such as math/reading assessments and graduation rates.
+
+------------------------------------------------------------------------
+
+Load packages
+
+```{r}
+
+library(tidyverse)
+library(haven)
+library(glue)
+library(MplusAutomation)
+library(here)
+library(janitor)
+library(gt)
+library(cowplot)
+library(DiagrammeR) 
+here::i_am("svalues.Rmd")
+```
+
+### Variable Description
+
+```{r, echo=FALSE, eval=TRUE, }
+tribble(
+   ~"Name",      ~"Label",  ~"Values",                                   
+#--------------|--------------------------------|-----|,
+  "leaid",   "District Identification Code", "",
+  "ncessch",   "School Identification Code", "",
+  "report_dis",   "Number of students harassed or bullied on the basis of disability",  "0 = No reported incidents, 1 = At least one reported incident",
+  "report_race",  "Number of students harassed or bullied on the basis of race, color, or national origin",  "0 = No reported incidents, 1 = At least one reported incident",
+  "report_sex", "Number of students harassed or bullied on the basis of sex",  "0 = No reported incidents, 1 = At least one reported incident",
+  "counselors_fte", "Number of full time equivalent counselors hired as school staff",  "0 = No staff present, 1 = At least one staff present",  
+  "psych_fte", "Number of full time equivalent psychologists hired as school staff",  "0 = No staff present, 1 = At least one staff present",
+  "law_fte", "Number of full time equivalent law enforcement officers hired as school staff",  "0 = No staff present, 1 = At least one staff present") %>% 
+gt() %>% 
+  tab_header(
+    title = "LCA indicators"  # Add a title
+    ) %>%
+  tab_options(
+    table.width = pct(75)
+  ) %>%
+  tab_footnote(
+    footnote = "Civil Rights Data Collection (CRDC)",
+    location = cells_title()) 
+```
+
+
+------------------------------------------------------------------------
+
+**Variables have been transformed to be dichotomous indicators using the following coding strategy**
+
+Harassment and bullying count variables are recoded `1` if the school reported at least one incident of harassment (`0` indicates no reported incidents).
+On the original scale reported by the CDRC staff variables for full time equivalent employees (FTE) are represented as `1` and part time employees are represented by values between `1` and `0`.
+Schools with greater than one staff of the designated type are represented by values greater than 1.
+All values greater than zero were recorded as `1s` (e.g., `.5`, `1`,`3`) indicating that the school has a staff present on campus at least part time.
+Schools with no staff of the designated type are indicated as `0` for the dichotomous variable.
+
+------------------------------------------------------------------------
+
+```{r, echo=FALSE, eval=TRUE, fig.align='center'}
+
+grViz(" digraph cfa_model {
+
+# The `graph` statement - No editing needed
+
+    graph [layout = dot, overlap = true]
+ 
+# Two `node` statements
+ 
+# One for measured variables (box) 
+
+    node [shape=box]
+    report_dis report_race report_sex counselors_fte psych_fte law_fte;
+ 
+# One for latent variables (circle) 
+ 
+    node [shape=circle]
+    bully [label=<Bullying <br/>C<sub>k</sub>>];
+    
+# `edge` statements
+ 
+    edge [minlen = 2]
+    bully -> {report_dis report_race report_sex counselors_fte psych_fte law_fte}
+ 
+ }") 
+```
+
+------------------------------------------------------------------------
+
+### What are `svalues`?
+
+In Mplus, the `SVALUES` option may be added in the `OUTPUT` section of the input file and is used to save the parameter estimates from the latent class model. These starting values can be utilized in subsequent analyses to replicate the solution, help with model convergence, or cross-validate solutions. Additionally, `SVALUES` has an option automatically reorder the classes in latent class analysis to enhance the interpretability and comparability of models.
+
+
+## Example Syntax Using `SVALUES`
+
+To use `SVALUES` in Mplus, you add it in the `OUTPUT` section of your Mplus input file. Here is a sample syntax:
+
+
+------------------------------------------------------------------------
+
+### Prepare Data
+
+```{r, eval=TRUE}
+df_bully <- read_csv(here("data", "crdc_lca_data.csv")) %>% 
+  clean_names() %>% 
+  dplyr::select(report_dis, report_race, report_sex, counselors_fte, psych_fte, law_fte) 
+```
+
+------------------------------------------------------------------------
+
+## Estimate a three class model and request starting values
+
+```{r, eval= FALSE}
+
+svalues  <- mplusObject(
+  
+  TITLE = "Requesting svalues",
+  
+  VARIABLE =
+    "categorical = report_dis-law_fte;
+     usevar = report_dis-law_fte;
+     classes = c(3);",
+  
+  ANALYSIS =
+    "estimator = mlr;
+     type = mixture;
+     starts = 200 100;",
+  
+  OUTPUT = "tech11 tech14 svalues",
+  
+  usevariables = colnames(df_bully),
+  rdata = df_bully)
+
+svalues_fit <- mplusModeler(svalues,
+                          dataout = here("svalues_output", "svalues.dat"),
+                          modelout = here("svalues_output", "svalues.inp") ,
+                          check = TRUE, run = TRUE, hashfilename = FALSE)
+
+```
+
+
+------------------------------------------------------------------------
+
+Using starting values 
+
+*Note*: Now `starts = 0` and we add the model statement with the `svalues` copied and pasted from the previous output.
+
+```{r, eval= FALSE}
+
+using_svalues  <- mplusObject(
+  
+  TITLE = "Requesting svalues",
+  
+  VARIABLE =
+    "categorical = report_dis-law_fte;
+     usevar = report_dis-law_fte;
+     classes = c(3);",
+  
+  ANALYSIS =
+    "estimator = mlr;
+     type = mixture;
+     starts = 0;",
+  
+  MODEL = 
+    "%OVERALL%
+
+     [ c#1*-0.94901 ];
+     [ c#2*-1.80156 ];
+
+     %C#1%
+
+     [ report_dis$1*4.06219 ];
+     [ report_race$1*15 ];
+     [ report_sex$1*1.08993 ];
+     [ counselors_fte$1*-1.25342 ];
+     [ psych_fte$1*-1.21506 ];
+     [ law_fte$1*0.66250 ];
+
+     %C#2%
+
+     [ report_dis$1*0.84146 ];
+     [ report_race$1*-1.43637 ];
+     [ report_sex$1*-0.78550 ];
+     [ counselors_fte$1*-0.17590 ];
+     [ psych_fte$1*-0.76206 ];
+     [ law_fte$1*1.03646 ];
+
+     %C#3%
+
+     [ report_dis$1*4.65868 ];
+     [ report_race$1*3.62966 ];
+     [ report_sex$1*2.90587 ];
+     [ counselors_fte$1*0.74586 ];
+     [ psych_fte$1*0.73497 ];
+     [ law_fte$1*3.92867 ];",
+  
+  OUTPUT = "sampstat tech11 tech14 svalues",
+  
+  usevariables = colnames(df_bully),
+  rdata = df_bully)
+
+using_svalues_fit <- mplusModeler(using_svalues,
+                          dataout = here("svalues_output", "svalues.dat"),
+                          modelout = here("svalues_output", "using_svalues.inp") ,
+                          check = TRUE, run = TRUE, hashfilename = FALSE)
+
+```
+
+------------------------------------------------------------------------
+
+Reorder the classes
+
+*Note*: Now `starts = 0` and instead of copying and pasting the starting values as we did in the second model, we use `OPTSEED` to specify the seed of the best loglikelihood solution from the first model.
+
+
+```{r, eval= FALSE}
+
+reordering_classes  <- mplusObject(
+  
+  TITLE = "Requesting svalues",
+  
+  VARIABLE =
+    "categorical = report_dis-law_fte;
+     usevar = report_dis-law_fte;
+     classes = c(3);",
+  
+  ANALYSIS =
+    "estimator = mlr;
+     type = mixture;
+     starts = 0;
+     optseed = 802779;",
+  
+  OUTPUT = "tech11 tech14 svalues(3 1 2);",
+  
+  usevariables = colnames(df_bully),
+  rdata = df_bully)
+
+reordering_classes_fit <- mplusModeler(reordering_classes,
+                          dataout = here("svalues_output", "svalues.dat"),
+                          modelout = here("svalues_output", "reordering_classes.inp") ,
+                          check = TRUE, run = TRUE, hashfilename = FALSE)
+
+```
+
+
+------------------------------------------------------------------------
+
+## References
+
+Asparouhov & Muthén (2012)
+Using Mplus TECH11 and TECH14 to test the number of latent classes.
+<https://www.statmodel.com/examples/webnotes/webnote14.pdf>
+
+Geiser, C. (2024)
+Mplus SVALUES Command Explained.
+<https://www.youtube.com/watch?v=nCUjmgKhGYY&t=196s>
+
+Hallquist, M. N., & Wiley, J. F.
+(2018).
+MplusAutomation: An R Package for Facilitating Large-Scale Latent Variable Analyses in Mplus.
+Structural equation modeling: a multidisciplinary journal, 25(4), 621-638.
+
+Muthén, B. O., Muthén, L. K., & Asparouhov, T.
+(2017).
+Regression and mediation analysis using Mplus.
+Los Angeles, CA: Muthén & Muthén.
+
+Muthén, L.K.
+and Muthén, B.O.
+(1998-2017).
+Mplus User's Guide.
+Eighth Edition.
+Los Angeles, CA: Muthén & Muthén
+
+R Core Team (2017).
+R: A language and environment for statistical computing.
+R Foundation for Statistical Computing, Vienna, Austria.
+URL <http://www.R-project.org/>
+
+Wickham et al., (2019).
+Welcome to the tidyverse.
+Journal of Open Source Software, 4(43), 1686, <https://doi.org/10.21105/joss.01686>
+
+------------------------------------------------------------------------
+
+![](figures/UCSB_Navy_mark.png){width="75%"}

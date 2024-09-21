@@ -1,0 +1,17 @@
+TITLE:
+Requesting svalues
+DATA:
+FILE = "C:/Users/dinan/Box/IES_IMMERSE/youtube_materials/mini_topics/
+svalues/svalues.dat"; 
+VARIABLE:
+NAMES = report_dis report_race report_sex counselors_fte psych_fte law_fte; 
+ MISSING=.;
+ categorical = report_dis-law_fte;
+     usevar = report_dis-law_fte;
+     classes = c(3);
+ANALYSIS:
+estimator = mlr;
+     type = mixture;
+     starts = 200 100;
+OUTPUT:
+tech11 tech14 svalues
