@@ -24,10 +24,10 @@ The Institute of Mixture Modeling for Equity-Oriented Researchers, Scholars, and
 
 -   Follow us on [Twitter](https://twitter.com/IMMERSE_UCSB)!
 
-How to reference this workshop: Institute of Mixture Modeling for Equity-Oriented Researchers, Scholars, and Educators (2023).
+How to reference this workshop: Institute of Mixture Modeling for Equity-Oriented Researchers, Scholars, and Educators (2025).
 IMMERSE Online Resources (IES No. 305B220021).
 Institute of Education Sciences.
-<https://immerse-ucsb.github.io/pre-training>
+<https://immerse-ucsb.github.io/>
 
 ------------------------------------------------------------------------
 
@@ -131,7 +131,7 @@ grViz(" digraph cfa_model {
 
 ### What are `svalues`?
 
-In Mplus, the `SVALUES` option may be added in the `OUTPUT` section of the input file and is used to save the parameter estimates from the latent class model. These starting values can be utilized in subsequent analyses to replicate the solution, help with model convergence, or cross-validate solutions. Additionally, `SVALUES` has an option automatically reorder the classes in latent class analysis to enhance the interpretability and comparability of models.
+In Mplus, the `SVALUES` option may be added in the `OUTPUT` section of the input file and is used to save the parameter estimates from the latent class model. These starting values can be utilized in subsequent analyses to replicate the solution, help with model convergence, or cross-validate solutions. Additionally, `SVALUES` has an option automatically reorder the classes in latent class analysis to help with the interpretability and comparability of models.
 
 
 ## Example Syntax Using `SVALUES`
@@ -169,7 +169,7 @@ svalues  <- mplusObject(
      type = mixture;
      starts = 200 100;",
   
-  OUTPUT = "tech11 tech14 svalues",
+  OUTPUT = "tech11 tech14 svalues;",
   
   usevariables = colnames(df_bully),
   rdata = df_bully)
@@ -186,7 +186,7 @@ svalues_fit <- mplusModeler(svalues,
 
 Using starting values 
 
-*Note*: Now `starts = 0` and we add the model statement with the `svalues` copied and pasted from the previous output.
+*Note*: Now `starts = 200 100` and we add the model statement with the `svalues` copied and pasted from the previous output. When adding random starts, the `svalues` often helps the model converge on a solution quicker. You are starting the estimation at the parameter values where the previous run start, which often speed up the estimation and can help the model converge on the better solution. Alternatively, you can turn off random starts, or `starts = 0` to provide a solution based on the `svalues` which is useful when you want to replicate a solution without exploring alternative solutions.
 
 ```{r, eval= FALSE}
 
@@ -202,7 +202,7 @@ using_svalues  <- mplusObject(
   ANALYSIS =
     "estimator = mlr;
      type = mixture;
-     starts = 0;",
+     starts = 200 100;",
   
   MODEL = 
     "%OVERALL%
@@ -237,7 +237,7 @@ using_svalues  <- mplusObject(
      [ psych_fte$1*0.73497 ];
      [ law_fte$1*3.92867 ];",
   
-  OUTPUT = "sampstat tech11 tech14 svalues",
+  OUTPUT = "sampstat tech11 tech14 svalues;",
   
   usevariables = colnames(df_bully),
   rdata = df_bully)

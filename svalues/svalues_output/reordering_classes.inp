@@ -1,8 +1,8 @@
 TITLE:
 Requesting svalues
 DATA:
-FILE = "C:/Users/dinan/Box/IES_IMMERSE/youtube_materials/mini_topics/
-svalues/svalues.dat"; 
+FILE = "C:/Users/dnajiarch/Box/IES_IMMERSE/youtube_materials/mini_topics/
+svalues/svalues_output/svalues.dat"; 
 VARIABLE:
 NAMES = report_dis report_race report_sex counselors_fte psych_fte law_fte; 
  MISSING=.;

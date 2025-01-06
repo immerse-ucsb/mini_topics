@@ -1,8 +1,8 @@
 TITLE:
 Requesting svalues
 DATA:
-FILE = "C:/Users/dinan/Box/IES_IMMERSE/youtube_materials/mini_topics/
-svalues/svalues.dat"; 
+FILE = "C:/Users/dnajiarch/Box/IES_IMMERSE/youtube_materials/mini_topics/
+svalues/svalues_output/svalues.dat"; 
 VARIABLE:
 NAMES = report_dis report_race report_sex counselors_fte psych_fte law_fte; 
  MISSING=.;
@@ -12,7 +12,7 @@ NAMES = report_dis report_race report_sex counselors_fte psych_fte law_fte;
 ANALYSIS:
 estimator = mlr;
      type = mixture;
-     starts = 0;
+     starts = 200 100;
 MODEL:
 %OVERALL%
 
@@ -46,4 +46,4 @@ MODEL:
      [ psych_fte$1*0.73497 ];
      [ law_fte$1*3.92867 ];
 OUTPUT:
-sampstat tech11 tech14 svalues
+sampstat tech11 tech14 svalues;

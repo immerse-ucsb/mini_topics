@@ -1,14 +1,14 @@
-Mplus VERSION 8.10
+Mplus VERSION 8.11
 MUTHEN & MUTHEN
-09/08/2024   9:32 PM
+01/06/2025  10:15 AM
 
 INPUT INSTRUCTIONS
 
   TITLE:
   Requesting svalues
   DATA:
-  FILE = "C:/Users/dinan/Box/IES_IMMERSE/youtube_materials/mini_topics/
-  svalues/svalues.dat";
+  FILE = "C:/Users/dnajiarch/Box/IES_IMMERSE/youtube_materials/mini_topics/
+  svalues/svalues_output/svalues.dat";
   VARIABLE:
   NAMES = report_dis report_race report_sex counselors_fte psych_fte law_fte;
    MISSING=.;
@@ -20,7 +20,7 @@ INPUT INSTRUCTIONS
        type = mixture;
        starts = 200 100;
   OUTPUT:
-  tech11 tech14 svalues
+  tech11 tech14 svalues;
 
 
 
@@ -92,7 +92,7 @@ Random Starts Specifications
 Link                                                         LOGIT
 
 Input data file(s)
-  C:/Users/dinan/Box/IES_IMMERSE/youtube_materials/mini_topics/svalues/svalues.d
+  C:/Users/dnajiarch/Box/IES_IMMERSE/youtube_materials/mini_topics/svalues/svalu
 Input data format  FREE
 
 
@@ -640,9 +640,9 @@ TECHNICAL 14 OUTPUT
           Successful Bootstrap Draws                            5
 
 
-     Beginning Time:  21:32:12
-        Ending Time:  21:32:16
-       Elapsed Time:  00:00:04
+     Beginning Time:  10:15:25
+        Ending Time:  10:15:30
+       Elapsed Time:  00:00:05
 
 
 
@@ -655,4 +655,4 @@ Fax: (310) 391-8971
 Web: www.StatModel.com
 Support: Support@StatModel.com
 
-Copyright (c) 1998-2023 Muthen & Muthen
+Copyright (c) 1998-2024 Muthen & Muthen
